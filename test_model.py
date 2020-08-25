@@ -66,20 +66,32 @@ if __name__ == '__main__':
     tf = load_transform()  # image transformer
 
     # load the test image
-    if os.path.exists('test.jpg'):
-        os.remove('test.jpg')
-    img_url = 'http://places2.csail.mit.edu/imgs/demo/IMG_5970.JPG'
-    os.system('wget %s -q -O test.jpg' % img_url)
-    img = Image.open('test.jpg')
-    input_img = V(tf(img).unsqueeze(0), volatile=True)
+    #if os.path.exists('test.jpg'):
+    #    os.remove('test.jpg')
+    #img_url = 'http://places2.csail.mit.edu/imgs/demo/IMG_5970.JPG'
+    #os.system('wget %s -q -O test.jpg' % img_url)
+    import glob
+    pred = [0]* len(glob.glob('../NymbleData/frames/*.jpeg'))
+    print(len(pred))
+    from tqdm import tqdm
+    for fname in tqdm(glob.glob('../NymbleData/frames/*.jpeg')):
+        image_idx = int(fname.split('/')[-1].split('.')[0])-1
+        if image_idx > 100:
+            continue
+        img = Image.open('../NymbleData/frames/921.jpeg')
+        input_img = V(tf(img).unsqueeze(0), volatile=True)
 
-    # forward pass
-    logit = model.forward(input_img)
-    h_x = F.softmax(logit, 1).data.squeeze()
-    probs, idx = h_x.sort(0, True)
-
-    print(img_url)
-    # output the prediction of action category
-    print('--Top Actions:')
-    for i in range(0, 5):
-        print('{:.3f} -> {}'.format(probs[i], categories[idx[i]]))
+        # forward pass
+        logit = model.forward(input_img)
+        h_x = F.softmax(logit, 1).data.squeeze()
+        probs, idx = h_x.sort(0, True)
+        #print(img_url)
+        # output the prediction of action category
+        #print('--Top Actions:')
+        for i in range(0, 5):
+            #print('{:.3f} -> {}'.format(probs[i], categories[idx[i]]))
+            if categories[idx[i]] == 'stirring':
+                if probs[i] > 0.3:
+                    pred[image_idx] = 1
+                    #print(pred)
+    print(pred[:100])
